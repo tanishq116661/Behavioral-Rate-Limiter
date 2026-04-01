@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import 'package:frontend/pages/dashboard.dart';
 import 'package:frontend/pages/users_page.dart';
 
 void main() {
@@ -47,7 +48,7 @@ class _MainLayoutState extends State<MainLayout> {
 
   final List<Widget> _screens = [
     const Center(child: Text("Home: Welcome", style: TextStyle(fontSize: 24))),
-    const Center(child: Text("Dashboard: Analytics Feed")),
+    const MyWidget(),
     const UsersPage(),
   ];
 

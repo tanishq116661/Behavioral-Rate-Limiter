@@ -41,8 +41,23 @@ function getUserSummary(userId) {
   };
 }
 
+function getAllSummaries() {
+  const summaries = [];
+  for (const [userId, bucket] of store.entries()) {
+    summaries.push({
+      userId,
+      totalEvents: bucket.events.length,
+      createdAt: bucket.createdAt,
+      updatedAt: bucket.updatedAt,
+      latestEvent: bucket.events[bucket.events.length - 1] || null,
+    });
+  }
+  return summaries;
+}
+
 module.exports = {
   addEvent,
   getUserEvents,
   getUserSummary,
+  getAllSummaries,
 };

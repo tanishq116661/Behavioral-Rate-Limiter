@@ -2,6 +2,7 @@ const express = require('express');
 const { addEvent, getUserEvents, getUserSummary } = require('../store/userEventStore');
 const { computeBehaviorFeatures } = require('../services/behaviorService');
 const { scoreFeatures } = require('../services/modelClient');
+const { getAllSummaries } = require('../store/userEventStore');
 
 const router = express.Router();
 
@@ -70,5 +71,27 @@ router.get('/users/:userId/summary', (req, res) => {
     features,
   });
 });
+
+router.get('/dashboard/all', async (req, res) => {
+  try {
+    const users = getAllSummaries();
+    const detailedSummaries = await Promise.all(users.map(async (user) => {
+      const events = getUserEvents(user.userId);
+      const features = computeBehaviorFeatures(events);
+      const inference = await scoreFeatures(features);
+
+      return {
+        ...user,
+        riskScore: inference.riskScore,
+        decision: inference.decision,
+        features
+      };
+    }));
+
+    res.status(200).json(detailedSummaries);
+  } catch (error) {
+    res.status(500).json({error: String(error.message || error)});
+  }
+})
 
 module.exports = router;

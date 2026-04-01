@@ -5,8 +5,7 @@ function clamp(value, min, max) {
 }
 
 function decide(score) {
-  if (score >= 0.85) return 'block';
-  if (score >= 0.55) return 'review';
+  if (score >= 0.50) return 'block';
   return 'allow';
 }
 

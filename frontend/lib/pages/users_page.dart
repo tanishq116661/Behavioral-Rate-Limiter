@@ -28,52 +28,29 @@ class UsersPage extends StatefulWidget {
 class _UsersPageState extends State<UsersPage> {
   final List<UserInstance> _instances = [];
 
-  Future<void> _sendRequest(String name, {bool showFeedback = true}) async {
-    final uri = Uri.parse('$_backendBaseUrl/api/events');
-    final body = {
-      'userId': name,
-      'path': '/frontend/simulated',
-      'method': 'GET',
-      'protocol': 'tcp',
-      'timestamp': DateTime.now().millisecondsSinceEpoch,
-      'payloadBytes': 400,
-      'responseBytes': 900,
-    };
-
+  Future<void> _sendRequest(UserInstance inst) async {
+    final url = Uri.parse('$_backendBaseUrl/api/events');
     try {
       final response = await http.post(
-        uri,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(body),
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "userId": inst.name,
+          "timestamp": DateTime.now().millisecondsSinceEpoch,
+          "path": "/api/resources",
+          "method": "GET",
+          "payloadBytes": 0,
+          "responseBytes": 1024,
+        }),
       );
 
-      if (!mounted) return;
-
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        final data = jsonDecode(response.body) as Map<String, dynamic>;
-        final decision = data['decision'] ?? 'unknown';
-        final score = data['riskScore'] ?? '-';
-
-        if (showFeedback) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('$name -> $decision (risk: $score)')),
-          );
-        }
-        return;
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        print("Decision for ${inst.name}: ${data['decision']} (Score: ${data['riskScore']})");
       }
-
-      if (showFeedback) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Request failed for $name (${response.statusCode})')),
-        );
-      }
-    } catch (_) {
-      if (!mounted) return;
-      if (showFeedback) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not reach backend for $name')),
-        );
-      }
+    }
+    catch (e) {
+      print("Error connecting to backend: $e");
     }
   }
 
@@ -124,7 +101,7 @@ class _UsersPageState extends State<UsersPage> {
     if (isAuto) {
       newInst.timer = Timer.periodic(
         Duration(milliseconds: interval),
-        (timer) => _sendRequest(name, showFeedback: false),
+        (timer) => _sendRequest(newInst),
       );
     }
 
@@ -182,7 +159,7 @@ class _UsersPageState extends State<UsersPage> {
               if (!inst.isAutomatic) 
                 IconButton(
                   icon: const Icon(Icons.send, color: Colors.blue,),
-                  onPressed: () => _sendRequest(inst.name),
+                  onPressed: () => _sendRequest(inst),
                 ),
               IconButton(
                 onPressed: () => _deleteInstance(inst),
